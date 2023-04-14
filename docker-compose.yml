@@ -7,3 +7,8 @@ services:
       - 9042:9042
     environment:
       - CASSANDRA_CLUSTER_NAME=akka-cassandra-cluster
+    volumes:
+      - numerator:/var/lib/cassandra
+
+volumes:
+  numerator:

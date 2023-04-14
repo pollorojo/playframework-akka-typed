@@ -7,19 +7,22 @@ import akka.persistence.typed.scaladsl.{Effect, EventSourcedBehavior}
 
 object NumeratorActor {
   sealed trait Command
-  case class GetNextNumber(replyTo: ActorRef[String]) extends Command
+  case class GetNextNumber(replyTo: ActorRef[NumeratorActor.OrderNumberResponse]) extends Command
 
   sealed trait Event
-  case class OrderNumberGenerated(number: String) extends Event
+  case class OrderNumberGenerated(number: Int) extends Event
+
+  sealed trait Response
+  case class OrderNumberResponse(number: Int) extends Response
 
   // State
-  case class Store(currentNumber: String)
+  case class Store(currentNumber: Int)
 
   def apply(): Behavior[Command] = {
     Behaviors.setup {
       _ => EventSourcedBehavior[Command, Event, Store](
         persistenceId = PersistenceId.ofUniqueId("MyStore"), // value used to identify in db
-        emptyState = Store("100"), // Initial state
+        emptyState = Store(100), // Initial state
         commandHandler = commandHandler(), // <- invoking method
         eventHandler = eventHandler // <- passing constant
       )
@@ -33,7 +36,7 @@ object NumeratorActor {
         val newNumber = state.currentNumber + 1
         Effect
           .persist(OrderNumberGenerated(newNumber))
-          .thenReply(replyTo)(_ => newNumber)
+          .thenReply(replyTo)(_ => OrderNumberResponse(number = newNumber))
     }
   }
 
